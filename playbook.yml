@@ -1,0 +1,68 @@
+---
+- name: aws htf
+  hosts: web
+  become: true
+  gather_facts: false
+
+  tasks:
+  - name:
+    ping:
+
+  - name: Install podman
+    dnf:
+      name: podman
+      state: latest
+  
+  - name: Install python3
+    dnf:
+      name: python3
+      state: latest
+
+  - name: Install firewalld
+    dnf:
+      name: firewalld
+      state: latest
+
+
+  - name: Pull image from Quay.io
+    containers.podman.podman_image:
+      name: quay.io/javavax936/htf-donkerwit
+      state: present
+
+  - name: Run jitse-htf container with Podman
+    containers.podman.podman_container:
+      name: jitse-htf
+      image: quay.io/javavax936/htf-donkerwit
+      state: started
+      recreate: yes
+      ports:
+        - "80:80"
+        - "443:443"
+      volumes:
+        - "/etc/letsencrypt:/etc/letsencrypt:ro"
+      detach: yes
+
+  - name: Ensure firewalld is running
+    ansible.builtin.service:
+      name: firewalld
+      state: started
+      enabled: yes
+
+  - name: Open HTTP port
+    ansible.posix.firewalld:
+      service: http
+      permanent: yes
+      state: enabled
+      immediate: yes
+
+  - name: Open HTTPS port 
+    ansible.posix.firewalld:
+      service: https
+      permanent: yes
+      state: enabled
+      immediate: yes
+  
+  - name: Reload firewalld
+    ansible.builtin.service:
+      name: firewalld
+      state: reloaded
