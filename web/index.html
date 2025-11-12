@@ -1,23 +1,258 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Fullscreen iframe</title>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-        }
-        iframe {
-            border: none;
-            width: 100%;
-            height: 100%;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>hackthefuture — d0nkerw1t</title>
+  <meta name="description" content="hackthefuture — showcase by d0nkerw1t" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for neon/glow, glitch and canvas positioning */
+  :root{--bg:#03040a;--accent:#ffffff;--accent2:#06b6d4; --hl1-r:255;--hl1-g:255;--hl1-b:255;--hl2-r:255;--hl2-g:255;--hl2-b:255}
+    /* Prevent horizontal scrolling on small devices */
+    html,body{overflow-x:hidden; width:100%;}
+    /* animated subtle background shift */
+    @keyframes bgShift {
+      0% { background-position: 0% 50%, 100% 50%; }
+      50% { background-position: 100% 50%, 0% 50%; }
+      100% { background-position: 0% 50%, 100% 50%; }
+    }
+  body{background:radial-gradient(ellipse at 10% 5%, rgba(124,58,237,0.06) 0%, transparent 12%), radial-gradient(ellipse at 90% 95%, rgba(6,182,212,0.04) 0%, transparent 12%), var(--bg); background-size: 200% 200%, 200% 200%, auto; animation: bgShift 24s ease-in-out infinite;}
+  .neon { text-shadow: 0 0 10px rgba(var(--hl1-r),var(--hl1-g),var(--hl1-b),1), 0 0 30px rgba(var(--hl2-r),var(--hl2-g),var(--hl2-b),0.9); color: var(--accent); }
+    .glitch {
+      position:relative; color:#fff;
+    }
+    .glitch::before, .glitch::after{
+      content: attr(data-text);
+      position:absolute; left:0; top:0; width:100%;
+      clip: rect(0,9999px,0,0);
+    }
+    .glitch::before{
+      left:2px; text-shadow:-2px 0 rgba(15,23,42,0.12); animation: glitchTop 2.5s infinite linear alternate-reverse;
+    }
+    .glitch::after{
+      left:-2px; text-shadow:-2px 0 rgba(15,23,42,0.08); animation: glitchBottom 3s infinite linear alternate-reverse;
+    }
+    @keyframes glitchTop{ 0%{clip:rect(0,9999px,0,0);} 20%{clip:rect(0,9999px,20px,0);} 40%{clip:rect(12px,9999px,30px,0);} 60%{clip:rect(0,9999px,6px,0);} 80%{clip:rect(18px,9999px,40px,0);} 100%{clip:rect(0,9999px,0,0);} }
+    @keyframes glitchBottom{ 0%{clip:rect(0,9999px,0,0);} 25%{clip:rect(26px,9999px,50px,0);} 50%{clip:rect(6px,9999px,28px,0);} 75%{clip:rect(14px,9999px,38px,0);} 100%{clip:rect(0,9999px,0,0);} }
+  /* canvas overlay */
+  #stage{ position: absolute; inset:0; z-index:1; }
+  /* animated background element */
+  /* brighter animated background on white */
+  /* bring the animated highlight slightly above the canvas and make it stronger */
+  @keyframes bgPulse {
+    0%   { transform: scale(1);   opacity: 0.9; }
+    50%  { transform: scale(1.06); opacity: 1; }
+    100% { transform: scale(1);   opacity: 0.9; }
+  }
+  #bgAnim{ position:fixed; inset:0; z-index:2; pointer-events:none; background: radial-gradient(circle at 10% 20%, rgba(var(--hl1-r),var(--hl1-g),var(--hl1-b),0.36) 0%, transparent 20%), radial-gradient(circle at 80% 80%, rgba(var(--hl2-r),var(--hl2-g),var(--hl2-b),0.28) 0%, transparent 24%), var(--bg); background-size: 200% 200%, 200% 200%, auto; animation: bgShift 18s ease-in-out infinite, bgPulse 6s ease-in-out infinite; mix-blend-mode: screen; opacity:0.95; will-change: transform, opacity; }
+    main{ position:relative; z-index:10 }
+  .glass{ background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); backdrop-filter: blur(6px); }
+  /* dark-offwhite accent buttons */
+  .btn-dark{ display:inline-block; padding:0.45rem 0.75rem; border-radius:0.5rem; background: rgba(255,255,255,0.04); color: var(--accent); border: 1px solid rgba(255,255,255,0.06); font-size:0.75rem; }
+  .btn-dark:hover{ background: rgba(255,255,255,0.08); }
+    /* small responsive tweaks */
+    @media (min-width: 1024px){ .headline { font-size: clamp(2.25rem, 6vw, 4rem); } }
+    /* responsive big team name */
+  #bigTeam{
+    font-weight: 800;
+    line-height: 0.9;
+    /* prevent breaking the word across lines */
+    word-break: normal;
+    overflow-wrap: normal;
+    white-space: nowrap;
+    hyphens: none;
+    max-width: 100%;
+    display: block;
+    margin: 0 auto;
+    color: var(--accent);
+  }
+    @media (max-width: 640px){ #bigTeam{ font-size: clamp(2rem, 10vw, 3.25rem); } }
+    @media (min-width: 641px) and (max-width: 1024px){ #bigTeam{ font-size: clamp(3rem, 8vw, 5rem); } }
+    @media (min-width: 1025px){ #bigTeam{ font-size: clamp(5rem, 9vw, 8rem); } }
+  </style>
 </head>
-<body>
-    <iframe src="https://sysgerm.xyz/" allowfullscreen></iframe>
+  <body class="antialiased text-white min-h-screen flex items-center justify-center p-6">
+  <!-- Animated CSS background layer (keeps animation visible even with canvas on top) -->
+  <div id="bgAnim" aria-hidden="true"></div>
+  <!-- Interactive canvas background -->
+  <canvas id="stage"></canvas>
+
+  <main class="max-w-5xl w-full">
+    <!-- top banner removed as requested -->
+
+  <section class="flex flex-col lg:flex-row gap-8 items-start">
+      <div class="flex-1">
+        <h1 class="headline font-extrabold tracking-tight leading-tight neon text-4xl lg:text-6xl mb-4 glitch" data-text="hackthefuture">
+          hackthefuture
+        </h1>
+  <p class="text-white mb-6">Presenting d0nkerw1t — a student collective with one mission: build something that bends expectation. We're here to push the edges of hardware, software, and storytelling.</p>
+
+        <div class="flex gap-4 flex-wrap">
+          <!-- top pill removed as requested -->
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="glass p-4 rounded-lg">
+            <h3 class="text-sm text-white uppercase">When</h3>
+            <p class="font-mono mt-1 text-white">12 Nov 2025</p>
+          </div>
+          <div class="glass p-4 rounded-lg">
+            <h3 class="text-sm text-white uppercase">Where</h3>
+            <p class="font-mono mt-1 text-white">Main Hall — hackthefuture</p>
+          </div>
+        </div>
+
+      </div>
+
+      <aside class="w-full lg:w-96 glass p-6 rounded-xl relative overflow-hidden">
+        <div class="mb-4">
+          <h2 class="text-lg font-bold">d0nkerw1t</h2>
+          <p class="text-sm text-white">Student hackers & creative coders — showcased at hackthefuture 2025.</p>
+        </div>
+
+  <div class="mt-4 text-sm text-slate-200">
+          <h3 class="text-white font-semibold">Team Members</h3>
+          <ul id="teamList" class="mt-2 space-y-1">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+
+        <!-- Focus/Project entries removed per request -->
+
+        <div class="mt-6 flex gap-3">
+          <a href="#contact" class="btn-dark">Contact</a>
+          <a href="https://github.com/AntonD0MS/htf2025-d0nkerw1t" class="btn-dark">Source</a>
+        </div>
+
+  <div class="absolute bottom-3 right-3 text-[10px] text-white">#d0nkerw1t</div>
+      </aside>
+    </section>
+
+    <section id="hero" class="mt-12 relative glass p-8 rounded-xl flex items-center justify-center" style="height:420px;">
+      <div class="relative z-20 text-center">
+        <h2 id="bigTeam" class="text-6xl lg:text-9xl font-extrabold tracking-tight neon leading-none">d0nkerw1t</h2>
+  <p class="text-white mt-4">Hackthefuture 2025 — showcased</p>
+      </div>
+    </section>
+
+    <!-- About section removed as requested -->
+
+  <footer id="contact" class="mt-12 text-sm text-white">Built by d0nkerw1t — demo ready for hackthefuture. Open-source spirit. <span class="ml-2">Want the code? Press the source button.</span></footer>
+  </main>
+
+  <script>
+    // --- Team data (edit these names to match your actual team) ---
+    const teamMembers = [
+      'Jitse Tambuyzer',
+      'Anton Doms'
+    ];
+    // populate team list in the aside
+    const teamListEl = document.getElementById('teamList');
+  if(teamListEl){ teamMembers.forEach(m => { const li = document.createElement('li'); li.className = 'text-white'; li.textContent = m; teamListEl.appendChild(li); }); }
+
+    // (Confetti and champion messaging removed — site updated to be neutral/featured)
+
+    // Canvas setup
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+    let w = innerWidth;
+    let h = innerHeight;
+    const DPR = Math.min(devicePixelRatio || 1, 2);
+    function resize(){
+      w = innerWidth; h = innerHeight;
+      // set backing buffer sized by DPR but keep CSS size locked to viewport to avoid overflow
+      canvas.width = Math.max(1, Math.floor(w * DPR));
+      canvas.height = Math.max(1, Math.floor(h * DPR));
+      canvas.style.width = '100vw';
+      canvas.style.height = '100vh';
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      initMatrix();
+    }
+    resize();
+    addEventListener('resize', resize);
+
+  // matrix rain variables (binary/hex + symbols for a hacker feel)
+  const letters = '01ABCDEF7890abcdef0123456789@#$%&*';
+    let columns = [];
+    function initMatrix(){
+      const fontSize = Math.max(12, Math.floor(Math.min(w,h) * 0.018));
+      const cols = Math.floor(w / fontSize);
+      columns = new Array(cols).fill(0).map(()=> Math.random()*-1000);
+      matrixFont = `${fontSize}px monospace`;
+      matrixSize = fontSize;
+    }
+    let matrixFont = '14px monospace';
+    let matrixSize = 14;
+    initMatrix();
+
+    // text scramble for the big team name
+    function scrambleText(el, text, duration=1200){
+      const chars = '!<>-_\/[]{}—=+*^?#________';
+      const start = performance.now();
+      function frame(now){
+        const t = Math.min(1, (now - start)/duration);
+        let out = '';
+        for(let i=0;i<text.length;i++){
+          if(Math.random() < t) out += text[i]; else out += chars[Math.floor(Math.random()*chars.length)];
+        }
+        el.textContent = out;
+        if(t < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+      // draw loop: matrix rain + subtle scanlines + big team text glitch
+      function draw(now){
+        // trail for fade effect (lighter trail so glyphs pop more)
+        ctx.fillStyle = 'rgba(3,7,18,0.06)';
+        ctx.fillRect(0,0,w,h);
+
+        // matrix (neon colors on dark background) with glow
+        ctx.font = matrixFont;
+        // time-based pulse so the animation reads as 'alive' even when subtle
+        const pulse = 0.65 + 0.45 * (0.5 + 0.5 * Math.sin(now * 0.003));
+        for(let i=0;i<columns.length;i++){
+          const x = i * matrixSize;
+          const y = columns[i];
+          const text = letters.charAt(Math.floor(Math.random()*letters.length));
+
+          // brighter glyphs + shadow glow modulated by pulse
+          ctx.shadowColor = `rgba(0,255,160,${0.9 * pulse})`;
+          ctx.shadowBlur = 6 * pulse;
+          const alpha = Math.min(1, 0.55 + Math.random() * 0.45) * Math.min(1, 0.8 + 0.6 * pulse);
+          ctx.fillStyle = `rgba(0,255,160, ${alpha})`;
+          ctx.fillText(text, x, y);
+          // reset shadow so scanlines and other draws aren't blurred
+          ctx.shadowBlur = 0;
+
+          // speed up columns slightly when pulse is high so motion is obvious
+          columns[i] = y > h + Math.random() * (400 + 300 * (1 - pulse)) ? Math.random()*-600 : y + matrixSize * (0.5 + Math.random() * (1.8 * pulse));
+        }
+
+        // subtle scanlines (light lines over dark background)
+        ctx.fillStyle = 'rgba(255,255,255,0.03)';
+        const lines = 60;
+        for(let i=0;i<lines;i++){
+          ctx.fillRect(0, (i/lines)*h, w, 0.5);
+        }
+
+        requestAnimationFrame(draw);
+      }
+      requestAnimationFrame(draw);
+
+  // big team text animation (scramble/glitch)
+  const bigEl = document.getElementById('bigTeam');
+  if(bigEl){ scrambleText(bigEl, 'd0nkerw1t', 1600); setInterval(()=> scrambleText(bigEl, 'd0nkerw1t', 900), 8000); }
+
+  // small UX: clicking the hero will re-run the scramble (no confetti)
+  const hero = document.getElementById('hero');
+  if(hero){ hero.addEventListener('click', ()=>{ if(bigEl) scrambleText(bigEl, 'd0nkerw1t', 900); }); }
+
+    // keep canvas interactive pointer fallback
+    let idle = 0; addEventListener('pointermove', ()=>{ idle = 0; });
+    setInterval(()=>{ idle++; if(idle > 200){ columns[Math.floor(Math.random()*columns.length)] = Math.random()*-500; idle = 0; } }, 300);
+
+  </script>
 </body>
 </html>
