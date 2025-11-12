@@ -1,0 +1,11 @@
+---
+- name: aws htf
+  hosts: web
+  become: true
+  gather_facts: false
+
+  roles:
+    - common
+    - container
+    - firewall
+

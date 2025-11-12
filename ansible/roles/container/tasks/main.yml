@@ -1,0 +1,19 @@
+---
+- name: Pull image from Quay.io
+  containers.podman.podman_image:
+    name: quay.io/javavax936/htf-donkerwit
+    state: present
+
+- name: Run jitse-htf container with Podman
+  containers.podman.podman_container:
+    name: jitse-htf
+    image: quay.io/javavax936/htf-donkerwit
+    state: started
+    recreate: yes
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/etc/letsencrypt:/etc/letsencrypt:ro"
+    detach: yes
+
